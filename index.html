@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Link Forge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://kit.fontawesome.com/7c1ba5a80a.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="#" id="howToPlayButton"><i class="fa-solid fa-circle-info"></i> How to Play</a>
+      <div>
+        <a class="donate-button" href="https://www.paypal.com/paypalme/yourpaypal" target="_blank"><i class="fa-brands fa-paypal"></i></a>
+      </div>
+    </div>
+  </nav>
+
+  <div id="gameContainer">
+    <canvas id="matrix3d"></canvas>
+  </div>
+
+  <div id="hud">
+    <h1>Link Forge</h1>
+    <p id="feedback">Your turn!</p>
+    <p id="playerScore">Your Score: 0</p>
+    <p id="computerScore">Computer Score: 0</p>
+    <button onclick="startGame()">Restart</button>
+  </div>
+
+  <div id="rulesModal" class="modal">
+    <div class="modal-content">
+      <h2>Welcome to Link Forge!</h2>
+      <p>Outscore the computer by linking points!</p>
+      <h2>How to Play</h2>
+      <ul>
+        <li>Click a node to place your point (<span class="modal-player-color">green</span>)</li>
+        <li>The computer will respond with a move (<span class="modal-computer-color">blue</span>)</li>
+        <li>Link 3+ adjacent nodes for 30 points + multipliers per extra</li>
+        <li>Drag to rotate view, scroll to zoom!</li>
+        <li>Highest score wins!</li>
+      </ul>
+      <button id="startGameButton">Start Game</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
