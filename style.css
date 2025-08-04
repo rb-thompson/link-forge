@@ -265,9 +265,8 @@ body {
 
 .game-end-message {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: 30%;
+    left: 38%;
     font-family: 'Press Start 2P', cursive;
     font-size: 2.5rem;
     text-align: center;
@@ -327,6 +326,16 @@ body {
     #copyright i {
         font-size: 1rem;
     }
+
+    .game-end-message {
+        font-size: 1rem;
+        top: 40%;
+        left: 18%;
+    }
+
+    #hud p {
+      font-size: 0.8rem;
+    }
 }
 
 @media (max-width: 768px) {
@@ -343,6 +352,16 @@ body {
     padding: 1.2rem;
     font-size: 0.8rem;
   }
+
+    .game-end-message {
+        font-size: 1.5rem;
+        top: 40%;
+        left: 20%;
+    }
+
+    #hud p {
+      font-size: 0.8rem;
+    }
 }
 
 .system-message {
@@ -351,7 +370,7 @@ body {
     left: 50%;
     transform: translateX(-50%);
     font-family: 'Press Start 2P', cursive;
-    font-size: 1rem;
+    font-size: 0.6rem;
     color: #00FF55;
     text-shadow: 0 0 10px #00FF55;
     opacity: 0;
