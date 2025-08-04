@@ -131,7 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function onMouseWheel(e) {
     e.preventDefault();
-    spherical.radius = Math.max(3, Math.min(10, spherical.radius + e.deltaY * 0.01));
+    spherical.radius = Math.max(3, Math.min(20, spherical.radius + e.deltaY * 0.01));
     updateCameraPos();
   }
 
