@@ -8,37 +8,48 @@ body {
 }
 
 .navbar {
-  background: transparent;
-  padding: 1rem 0.5rem;
   position: fixed;
   top: 0;
-  width: 100%;
-  z-index: 10;
-  font-size: 0.9rem;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: rgba(15, 15, 15, 0.7);
+  padding: 10px 0;
 }
 
 .navbar .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
   display: flex;
   justify-content: space-between;
-  padding: 0 1rem;
+  align-items: center;
 }
 
 .navbar a {
-  color: #ffcc00;
+  color: #4B5563;
   text-decoration: none;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Slightly increased gap to account for larger icons */
+  transition: color 0.3s ease;
 }
 
 .navbar a:hover {
-  color: #ffff66;
+  color: #00FF55;
+}
+
+.navbar i {
+  font-size: 1.2rem; /* Double the text size */
 }
 
 .donate-button {
-  padding-right: 0.5rem;
-  color: #33ff33;
-  text-decoration: none;
-  font-size: 1.6rem;
-  cursor: pointer;
-  transition: background 0.3s, color 0.3s;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 #gameContainer {
@@ -102,6 +113,7 @@ body {
   font-size: 0.8rem;
   cursor: pointer;
   transition: background 0.3s, color 0.3s;
+  margin-bottom: 2rem;
 }
 
 #hud button:hover, #hud a:hover {
@@ -123,18 +135,16 @@ body {
 }
 
 .modal-content {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: relative; /* Change from absolute to relative */
+  transform: none; /* Remove transform */
+  top: auto; /* Remove absolute positioning */
+  left: auto;
   background: #1a1a1a; /* Dark base to contrast amber */
   padding: 1.5rem;
-  border: 1px solid #ffaa003d; /* Amber border for terminal frame */
-  border-radius: 0; /* Remove rounded corners for boxy terminal look */
-  text-align: left; /* Left-aligned for terminal readability */
-  color: #ffaa00; /* Amber text color */
-  width: 90%;
+  margin: 1rem;
+  width: calc(100% - 2rem); /* Account for margins */
   max-width: 24rem; /* Slightly wider for better text layout */
+  box-sizing: border-box;
   font-family: 'Press Start 2P', monospace;
   line-height: 1.3;
 }
@@ -205,4 +215,151 @@ body {
   background: #117711; /* Darker hover state */
   color: #ffff66;
   border-color: #ffff66;
+}
+
+/* Make the primary button styles more specific */
+.modal-content button#startGameButton {
+    padding: 0.6rem 1rem;
+    background: #005500;
+    color: #33ff33;
+    border: 1px solid #33ff33;
+    border-radius: 0;
+    cursor: pointer;
+    font-family: 'Press Start 2P', monospace;
+    width: 100%;
+    margin-top: 2rem;
+}
+
+.modal-content button#startGameButton:hover {
+    background: #117711;
+    color: #ffff66;
+    border-color: #ffff66;
+}
+
+/* Add separate styles for close button */
+.modal-content button.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: transparent;
+    color: #ffcc33;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    line-height: 1;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    font-family: Arial, sans-serif;
+    width: auto;
+    margin: 0;
+}
+
+.modal-content button.modal-close:hover {
+    opacity: 1;
+    color: #ff6666;
+    transform: scale(1.1);
+    background: transparent;
+    border: none;
+}
+
+.game-end-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Press Start 2P', cursive;
+    font-size: 2.5rem;
+    text-align: center;
+    color: #00FF55;
+    text-shadow: 0 0 10px #00FF55;
+    opacity: 0;
+    display: none;
+    z-index: 1000;
+    pointer-events: none;
+    padding: 20px;
+    white-space: nowrap;
+}
+
+#copyright {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.5rem;
+    color: #4B5563;
+    z-index: 1000;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    padding: 8px;
+    margin-bottom: calc(env(safe-area-inset-bottom, 0) + 5px);
+}
+
+#copyright span {
+    white-space: nowrap;
+}
+
+#copyright a {
+    color: #4B5563;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    white-space: nowrap;
+}
+
+#copyright a:hover {
+    color: #00FF55;
+}
+
+#copyright i {
+    font-size: 1.2rem;
+}
+
+/* Add media query for extra small screens */
+@media (max-width: 360px) {
+    #copyright {
+        font-size: 0.4rem;
+        gap: 12px;
+        bottom: 8px;
+    }
+    
+    #copyright i {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar a, 
+    .navbar i,
+    .stacked-text span {
+        font-size: 0.5rem;
+    }
+    .navbar i {
+        font-size: 1rem; /* Keep icons larger on mobile but slightly smaller */
+    }
+    .modal-content {
+    margin: 1.5rem;
+    padding: 1.2rem;
+    font-size: 0.8rem;
+  }
+}
+
+.system-message {
+    position: fixed;
+    bottom: 30%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1rem;
+    color: #00FF55;
+    text-shadow: 0 0 10px #00FF55;
+    opacity: 0;
+    display: none;
+    z-index: 1000;
+    pointer-events: none;
+    padding: 20px;
+    white-space: nowrap;
+    background: rgba(15, 15, 15, 0.7);
+    border-radius: 4px;
 }

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Link Forge</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
@@ -11,9 +11,17 @@
 <body>
   <nav class="navbar">
     <div class="container">
-      <a href="#" id="howToPlayButton"><i class="fa-solid fa-circle-info"></i> How to Play</a>
+      <a href="#" id="howToPlayButton"><i class="fa-solid fa-circle-info"></i> HOW TO PLAY</a>
       <div>
-        <a class="donate-button" href="https://www.paypal.com/paypalme/xyzthompson" target="_blank"><i class="fa-brands fa-paypal"></i></a>
+        <a class="donate-button" href="https://www.paypal.com/paypalme/xyzthompson" target="_blank">
+          <i class="fa-brands fa-paypal"></i>
+          <div class="stacked-text">
+            <span>BUY</span>
+            <span>ME</span>
+            <span>A</span>
+            <span>COFFEE</span>
+          </div>
+        </a>
       </div>
     </div>
   </nav>
@@ -32,6 +40,7 @@
 
   <div id="rulesModal" class="modal">
     <div class="modal-content">
+      <button class="modal-close" aria-label="Close">&times;</button>
       <h2>Welcome to Link Forge!</h2>
       <p>Outscore the computer by linking points!</p>
       <h2>How to Play</h2>
@@ -44,6 +53,18 @@
       </ul>
       <button id="startGameButton">Start Game</button>
     </div>
+  </div>
+
+  <div id="gameEndMessage" class="game-end-message"></div>
+
+  <div id="systemMessage" class="system-message"></div>
+
+  <div id="copyright">
+    <span>&copy; 2025</span>
+    <a href="https://rbthompson.io" target="_blank">rbthompson.io</a>
+    <a href="https://github.com/rbthompson/link-forge" target="_blank">
+        <i class="fa-brands fa-github"></i>
+    </a>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>

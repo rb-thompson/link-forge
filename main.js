@@ -10,8 +10,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const COLORS = {
     DEFAULT_SPHERE: 0x1A2525,  // Dark teal-gray (unclaimed spheres, subtle and moody)
-    HOVER: 0x00FF55,           // Bright CRT green (hover highlight, glowing effect)
-    PLAYER: 0xFFAA00,          // Amber-orange (player spheres, warm and distinct)
+    HOVER: 0x00FF55,           // Pale CRT green (hover highlight, glowing effect)
+    PLAYER: 0x6bff9c,          // Light CRT green (player spheres, warm and distinct)
     COMPUTER: 0x00AAFF,        // Cyan-blue (computer spheres, cool and contrasting)
     AMBIENT_LIGHT: 0x7f8787,   // Dim teal-gray (soft ambient glow, dark-mode friendly)
     POINT_LIGHT: 0xCCFFCC      // Pale green (directional light, mimics CRT phosphor)
@@ -32,6 +32,13 @@ document.addEventListener("DOMContentLoaded", () => {
   let isDragging = false;
   let prevMouse = { x: 0, y: 0 };
   let hoveredSphere = null;
+
+  // Add these variables near the top with other state variables
+  let touchStartDistance = 0;
+  let isTouchZooming = false;
+  let touchStartTime = 0;
+  let touchMoved = false;
+  let touchStartPos = { x: 0, y: 0 };
 
   window.startGame = startGame; // Expose for the button
 
@@ -68,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const geo = new THREE.SphereGeometry(nodeRadius, 16, 16);
           const mat = new THREE.MeshStandardMaterial({ color: COLORS.DEFAULT_SPHERE, transparent: true, opacity: 0.5 });
           const mesh = new THREE.Mesh(geo, mat);
-          mesh.position.set(x * gap - gap, y * gap - gap + 0.6, z * gap - gap);
+          mesh.position.set(x * gap - gap, y * gap - gap + 1.5, z * gap - gap); // Changed 0.6 to 1.5
           mesh.userData.index = x * matrixSize * matrixSize + y * matrixSize + z;
           sphereGroup.add(mesh);
         }
@@ -76,12 +83,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     scene.add(sphereGroup);
 
+    // Just initialize system message without showing it
+    const systemMessage = document.getElementById('systemMessage');
+    systemMessage.style.display = 'none';
+    systemMessage.style.opacity = 0;
+    
     canvas.style.pointerEvents = 'auto';
     canvas.addEventListener("pointerdown", onPointerDown);
     canvas.addEventListener("pointermove", onPointerMove);
     canvas.addEventListener("pointerup", onPointerUp);
     canvas.addEventListener("wheel", onMouseWheel);
     canvas.addEventListener("click", onCanvasClick);
+
+    // Add touch event listeners
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+    canvas.addEventListener('touchend', onTouchEnd);
 
     window.addEventListener('resize', () => {
       if (renderer) resizeRenderer();
@@ -161,21 +178,118 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Modify the existing onCanvasClick function to prevent accidental touches
   function onCanvasClick(e) {
-    if (isDragging || !isPlayerTurn) return;
+    if (isDragging || isTouchZooming || !isPlayerTurn) return;
+    handleClick(e);
+  }
 
+  // Extract click handling logic to a separate function
+  function handleClick(e) {
     const rect = canvas.getBoundingClientRect();
     const mouse = {
-      x: ((e.clientX - rect.left) / rect.width) * 2 - 1,
-      y: -((e.clientY - rect.top) / rect.height) * 2 + 1
+        x: ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        y: -((e.clientY - rect.top) / rect.height) * 2 + 1
     };
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(sphereGroup.children, false);
 
     if (intersects.length) {
-      const idx = intersects[0].object.userData.index;
-      playerMove(idx);
+        const sphere = intersects[0].object;
+        const idx = sphere.userData.index;
+        
+        // Only process click if the sphere is unclaimed
+        if (!playerPoints.has(idx) && !computerPoints.has(idx)) {
+            // Reset any existing hover effects
+            if (hoveredSphere) {
+                hoveredSphere.material.emissive.set(0x000000);
+                hoveredSphere = null;
+            }
+            
+            // Ensure sphere uses correct player color
+            sphere.material.color.set(COLORS.PLAYER);
+            sphere.material.opacity = 1;
+            
+            playerMove(idx);
+        }
     }
+  }
+
+  function onTouchStart(e) {
+    e.preventDefault();
+    touchStartTime = Date.now();
+    touchMoved = false;
+    
+    if (e.touches.length === 2) {
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        touchStartDistance = Math.hypot(
+            touch2.clientX - touch1.clientX,
+            touch2.clientY - touch1.clientY
+        );
+        isTouchZooming = true;
+    } else if (e.touches.length === 1) {
+        isDragging = true;
+        const touch = e.touches[0];
+        touchStartPos = { x: touch.clientX, y: touch.clientY };
+        prevMouse = { x: touch.clientX, y: touch.clientY };
+    }
+}
+
+function onTouchMove(e) {
+    e.preventDefault();
+    
+    // Track if the touch has moved significantly
+    if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        const moveDistance = Math.hypot(
+            touch.clientX - touchStartPos.x,
+            touch.clientY - touchStartPos.y
+        );
+        if (moveDistance > 10) { // 10px threshold
+            touchMoved = true;
+        }
+    }
+
+    // Handle zoom and rotation
+    if (e.touches.length === 2 && isTouchZooming) {
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const currentDistance = Math.hypot(
+            touch2.clientX - touch1.clientX,
+            touch2.clientY - touch1.clientY
+        );
+        
+        const delta = touchStartDistance - currentDistance;
+        spherical.radius = Math.max(3, Math.min(30, spherical.radius + delta * 0.01));
+        touchStartDistance = currentDistance;
+        updateCameraPos();
+    } else if (e.touches.length === 1 && isDragging) {
+        const touch = e.touches[0];
+        const dx = touch.clientX - prevMouse.x;
+        const dy = touch.clientY - prevMouse.y;
+        spherical.theta -= dx * 0.005;
+        spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi + dy * 0.005));
+        prevMouse = { x: touch.clientX, y: touch.clientY };
+        updateCameraPos();
+    }
+}
+
+function onTouchEnd(e) {
+    e.preventDefault();
+    
+    // Handle tap for sphere selection
+    if (!touchMoved && e.changedTouches.length === 1 && (Date.now() - touchStartTime) < 300) {
+        const touch = e.changedTouches[0];
+        handleClick({
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            pointerType: 'touch'
+        });
+    }
+    
+    isDragging = false;
+    isTouchZooming = false;
   }
 
   function playerMove(idx) {
@@ -265,7 +379,7 @@ document.addEventListener("DOMContentLoaded", () => {
     anime({
       targets: s.scale,
       x: 1, y: 1, z: 1,
-      duration: 300,
+      duration: 200,
       easing: 'easeOutElastic(1, 0.8)'
     });
   }
@@ -274,9 +388,38 @@ document.addEventListener("DOMContentLoaded", () => {
     anime({
       targets: arr.map(s => s.scale),
       x: [1, 1.2, 1], y: [1, 1.2, 1], z: [1, 1.2, 1],
-      duration: 1000, loop: 2, easing: 'easeInOutSine'
+      duration: 500, loop: 2, easing: 'easeInOutSine'
     });
   }
+
+  // Add this function near your other animation functions
+  function animateLoserSpheres(loserPoints) {
+    const spheres = sphereGroup.children.filter(s => loserPoints.has(s.userData.index));
+    
+    spheres.forEach(sphere => {
+        // Random horizontal velocity
+        const randomX = (Math.random() - 0.5) * 0.1;
+        const randomZ = (Math.random() - 0.5) * 0.1;
+        
+        anime({
+            targets: sphere.position,
+            y: [-2, -10], // Fall down
+            x: `+=${randomX * 20}`, // Spread out horizontally
+            z: `+=${randomZ * 20}`,
+            duration: 1500,
+            easing: 'easeInQuad',
+            complete: () => {
+                // Fade out as they fall
+                anime({
+                    targets: sphere.material,
+                    opacity: 0,
+                    duration: 800,
+                    easing: 'linear'
+                });
+            }
+        });
+    });
+}
 
   function updateMatrixVisuals() {
     sphereGroup.children.forEach(s => {
@@ -293,10 +436,49 @@ document.addEventListener("DOMContentLoaded", () => {
     return playerPoints.size + computerPoints.size >= matrixSize ** 3;
   }
 
+  // Modify the showWinner function
   function showWinner() {
-    const txt = playerScore > computerScore ? "You win!" : playerScore < computerScore ? "Computer wins!" : "It’s a tie!";
+    const playerWon = playerScore > computerScore;
+    const txt = playerWon ? "You win!" : playerScore < computerScore ? "Computer wins!" : "It's a tie!";
     feedbackEl.textContent = `Game Over! ${txt}`;
-  }
+
+    // Show end game message with animation
+    const gameEndMessage = document.getElementById('gameEndMessage');
+    gameEndMessage.textContent = playerWon ? "VICTORY!" : 
+                                playerScore < computerScore ? "GAME OVER" : "IT'S A TIE!";
+    gameEndMessage.style.display = 'block';
+
+    // Animate the message
+    anime({
+        targets: gameEndMessage,
+        opacity: [0, 1],
+        scale: [0.5, 1],
+        duration: 1000,
+        easing: 'easeOutElastic(1, 0.8)',
+        complete: () => {
+            // Add pulsing effect after initial animation
+            anime({
+                targets: gameEndMessage,
+                scale: [1, 1.1],
+                textShadow: [
+                    '0 0 10px #00FF55',
+                    '0 0 20px #00FF55',
+                    '0 0 10px #00FF55'
+                ],
+                duration: 800,
+                direction: 'alternate',
+                loop: true,
+                easing: 'easeInOutSine'
+            });
+        }
+    });
+
+    // Don't animate on tie games
+    if (playerScore !== computerScore) {
+        const loserPoints = playerWon ? computerPoints : playerPoints;
+        animateLoserSpheres(loserPoints);
+    }
+}
 
   function startGame() {
     resetGame();
@@ -306,24 +488,98 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function resetGame() {
+    // Only show system message if game was already started (not first load)
+    const isRestart = playerPoints.size > 0 || computerPoints.size > 0;
+    
+    // Hide end game message
+    const gameEndMessage = document.getElementById('gameEndMessage');
+    anime.remove(gameEndMessage);
+    gameEndMessage.style.display = 'none';
+    gameEndMessage.style.opacity = 0;
+    
+    // Stop any ongoing animations first
+    anime.remove(sphereGroup.children);
+    
     playerPoints.clear();
     computerPoints.clear();
     playerScore = computerScore = 0;
     playerScoreEl.textContent = "Your Score: 0";
     computerScoreEl.textContent = "Computer Score: 0";
-    updateMatrixVisuals();
 
-    sphereGroup.children.forEach(s => {
-      s.material.color.set(0x4B5563);
-      s.material.opacity = 0.5;
-      s.material.emissive.set(0x000000);
-      s.scale.set(1, 1, 1);
+    // Only show reassembly message on restart
+    if (isRestart) {
+        const systemMessage = document.getElementById('systemMessage');
+        systemMessage.textContent = "Reassembling matrix...";
+        systemMessage.style.display = 'block';
+        
+        anime({
+            targets: systemMessage,
+            opacity: [0, 1],
+            duration: 500,
+            easing: 'easeOutQuad',
+            complete: () => {
+                setTimeout(() => {
+                    anime({
+                        targets: systemMessage,
+                        opacity: 0,
+                        duration: 500,
+                        easing: 'easeInQuad',
+                        complete: () => {
+                            systemMessage.style.display = 'none';
+                        }
+                    });
+                }, 2000);
+            }
+        });
+    }
+
+    // Reset all spheres with a staggered animation
+    sphereGroup.children.forEach((s, i) => {
+        const idx = s.userData.index;
+        const x = Math.floor(idx / (matrixSize * matrixSize));
+        const y = Math.floor((idx % (matrixSize * matrixSize)) / matrixSize);
+        const z = idx % matrixSize;
+        
+        // Calculate final position with new Y offset
+        const targetX = x * gap - gap;
+        const targetY = y * gap - gap + 1.5; // Changed 0.6 to 1.5
+        const targetZ = z * gap - gap;
+        
+        // Reset material properties
+        s.material.color.set(COLORS.DEFAULT_SPHERE);
+        s.material.opacity = 0.5;
+        s.material.emissive.set(0x000000);
+        s.scale.set(1, 1, 1);
+        
+        // Animate sphere back to position
+        anime({
+            targets: s.position,
+            x: targetX,
+            y: targetY,
+            z: targetZ,
+            duration: 1200,
+            delay: i * 50, // Stagger the animations
+            easing: 'easeOutElastic(1, 0.8)',
+            complete: () => {
+                // Ensure final position is exact
+                s.position.set(targetX, targetY, targetZ);
+            }
+        });
     });
-    anime.remove(sphereGroup.children.map(s => s.scale));
+    
+    // Reset camera position
     spherical = { radius: 10, phi: Math.PI / 2.5, theta: Math.PI / 6 };
     updateCameraPos();
-  }
+    
+    updateMatrixVisuals();
+}
 
+  // Add close button handler
+  document.querySelector('.modal-close').addEventListener('click', () => {
+      rulesModal.style.display = "none";
+      startGame();
+  });
+  
   function animate() {
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
